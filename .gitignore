@@ -1,0 +1,7 @@
+# python
+__pychache__
+*.pyc
+
+# HDF5 files
+*.h5
+*.hdf5

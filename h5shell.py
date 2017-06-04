@@ -31,18 +31,23 @@ import vt100
              # re.split(r"([\w(\\.)]+|(?P<quote>[\"'])(?:\\.|[^(?P=quote)])*(?P=quote))", r"ab'b c'")
              # if s and s.strip() and s != "'" and s != '"']
         # print(l)
-            
+
+def split_args(args):
+    return [s for s in
+            re.split(r"([\w(\\.)]+|(?P<quote>[\"'])(?:\\.|[^(?P=quote)])*(?P=quote))",
+                     args)
+            if s and s.strip() and s != "'" and s != '"']
 
 term = vt100.VT100()
 with term.activate():
     while True:
-        inp = term._get_input()
+        inp = split_args(term.get_input())
 
         if inp and inp[0].strip() == "exit":
             break
         
         term.print("input: ", inp)
-    term.print(term.dump_history())
+    term.print(term.history.dump())
 
 
 def run():

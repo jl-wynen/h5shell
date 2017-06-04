@@ -3,20 +3,17 @@ import termios
 import tty
 
 from ascii_codes import ASCII
-import terminal
+from terminal import Terminal
 
-class VT100:
+class VT100(Terminal):
     def __init__(self):
+        super(VT100, self).__init__()
+
+        self.inFD = sys.stdin.fileno()
         self._rawMode = False
-        self._fd = sys.stdin.fileno()
-        self.prompt = "$ "
         self._inStr = ""
         self._cursor = 0 # relative to inStr, not counting prompt
         self._handle_input = self._default_input_handle
-        self._history = []
-        self._histMaxLength = 500
-        self._histPtr = 0
-        self._current = ""
 
         self._do = {
             ASCII.ETX: self._do_abort,
@@ -41,27 +38,22 @@ class VT100:
         }
 
     def _raw_mode(self):
-        self._oldattrs = termios.tcgetattr(self._fd)
+        self._oldattrs = termios.tcgetattr(self.inFD)
 
         try:
-            tty.setraw(self._fd)
+            tty.setraw(self.inFD)
             self._rawMode = True
         except:
-            print("Unable to switch terminal to raw mode.")
-            termios.tcsetattr(self._fd, termios.TCSADRAIN, self._oldattrs)
+            self.print("Unable to switch terminal to raw mode.")
+            termios.tcsetattr(self.inFD, termios.TCSADRAIN, self._oldattrs)
             raise
         
     def _reset(self):
-        termios.tcsetattr(self._fd, termios.TCSADRAIN, self._oldattrs)
+        termios.tcsetattr(self.inFD, termios.TCSADRAIN, self._oldattrs)
         self._rawMode = False
 
     # does not touch _inStr
-    def _clear_from_cursor(self, shift=0):
-        if shift > 0:
-            self._move_cursor_right(shift)
-        elif shift < 0:
-            self._move_cursor_left(shift)
-            
+    def _clear_output_from_cursor(self):
         self.print(chr(ASCII.ESC)+"[K", end="")
             
     def _move_cursor_left(self, amt=1):
@@ -88,28 +80,32 @@ class VT100:
                 # self.print(chr(ASCII.ESC)+"[{}D".format(amt), end="")
                 self.print((chr(ASCII.ESC)+"[D")*amt, end="")
 
+    def _clear_input(self):
+        if self._inStr:
+            self._inStr = ""
+            if self._cursor > 0:
+                self._move_cursor_left(self._cursor)
+            self._clear_output_from_cursor()
+                
     def _do_up(self):
-        if self._histPtr > 0:
-            if self._histPtr == len(self._history):
-                self._current = self._inStr
-            if self._inStr:
-                self._clear_from_cursor(-self._cursor)
-            self._histPtr -= 1
-            self._inStr = self._history[self._histPtr]
-            self.print(self._inStr, end="")
-            self._cursor = len(self._inStr)
+        try:
+            aux = self.history.back(self._inStr)
+        except IndexError:
+            return
+        
+        self._clear_input()
+        if aux:
+            self._insert(aux)
 
     def _do_down(self):
-        if self._histPtr < len(self._history):
-            if self._inStr:
-                self._clear_from_cursor(-self._cursor)
-            self._histPtr += 1
-            if self._histPtr == len(self._history):
-                self._inStr = self._current
-            else:
-                self._inStr = self._history[self._histPtr]
-            self.print(self._inStr, end="")
-            self._cursor = len(self._inStr)
+        try:
+            aux = self.history.forward()
+        except IndexError:
+            return
+
+        self._clear_input()
+        if aux:
+            self._insert(aux)
 
     def _do_right(self):
         self._move_cursor_right()
@@ -121,7 +117,7 @@ class VT100:
         self.print("^C")
         self._inStr = ""
         self._cursor = 0
-        self._histPtr = len(self._history)
+        self.history.reset()
         self.print(self.prompt, end="")
 
     def _do_exit(self):
@@ -149,12 +145,7 @@ class VT100:
 
     def _do_enter(self):
         if self._inStr:
-            if len(self._history) == 0 or self._inStr != self._history[-1]:
-                self._history.append(self._inStr)
-                self._histPtr = len(self._history)
-            if len(self._history) > self._histMaxLength:
-                self._history = self._history[1:]
-                self._histPtr -= 1
+            self.history.append(self._inStr)
             self.print()
             return self._inStr
         else:
@@ -192,7 +183,7 @@ class VT100:
             except KeyError:
                 self._insert("^"+self._escSeq)
             
-    def _get_input(self):
+    def get_input(self):
         self.print(self.prompt, end="")
         
         self._inStr = ""
@@ -200,24 +191,20 @@ class VT100:
         while True:
             inp = self._handle_input(sys.stdin.read(1))
             if inp:
-                return terminal.split_args(inp)
+                return inp
 
 
-    def print(self, *args, end="\n"):
+    def print(self, *args, end="\n", **kwargs):
         if self._rawMode:
             if end:
                 # need explicit carriage return
-                print(*args, end=end+"\r")
+                print(*args, end=end+"\r", **kwargs)
             else:
-                print(*args, end="")
+                print(*args, end="", **kwargs)
         else:
-            print(*args, end=end)
+            print(*args, end=end, **kwargs)
             
         sys.stdout.flush()
-
-    def dump_history(self):
-        return "\r\n".join("{:5d}  {:s}".format(i, self._history[i])
-                         for i in range(len(self._history)))
 
     def activate(self):
         class TermMngr:

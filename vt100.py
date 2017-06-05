@@ -219,9 +219,8 @@ class VT100(Terminal):
             except KeyError:
                 self._insert("^"+self._escSeq)
 
-    def activate(self):
+    def _activate(self):
         """
-        Prime the terminal for input.
         Switches to raw mode and returns a context manager to switch back
         when the shell is terminated.
         """
@@ -243,14 +242,14 @@ class VT100(Terminal):
         Return:
         The string entered. If the user entered EOF, 'exit' is returned.
         """
-        self.print(self.prompt, end="")
-        self._inStr = ""
-        self._cursor = 0
-        while True:
-            inp = self._handle_input(sys.stdin.read(1))
-            if inp:
-                return inp
-
+        with self._activate():
+            self.print(self.prompt, end="")
+            self._inStr = ""
+            self._cursor = 0
+            inp = None
+            while not inp:
+                inp = self._handle_input(sys.stdin.read(1))
+        return inp
 
     def print(self, *args, end="\n", **kwargs):
         """
@@ -258,9 +257,10 @@ class VT100(Terminal):
         The built in print function does not work properly when in raw mode.
         """
         if self._rawMode:
+            outp = [s.replace("\n", "\n\r") if isinstance(s,str) else s for s in args]
             if end:
                 # need explicit carriage return
-                print(*args, end=end+"\r", **kwargs)
+                print(*outp, end=end+"\r", **kwargs)
             else:
                 print(*args, end="", **kwargs)
         else:

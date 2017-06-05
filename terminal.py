@@ -1,5 +1,5 @@
 class Terminal:
-
+    
     class History:
         def __init__(self, maxLength=500):
             self._history = []
@@ -55,12 +55,6 @@ class Terminal:
     def __init__(self):
         self.history = self.History()
         self.prompt = "$ "
-    
-    def get_input(self):
-        pass
-
-    def print(self, *args, **kwargs):
-        print(*args, **kwargs)
 
     def activate(self):
         class TermMngr:
@@ -71,4 +65,20 @@ class Terminal:
                 return False
             
         return TermMngr()
+    
+    def get_input(self):
+        inp = None
+        while not inp:
+            try:
+                inp = input(self.prompt)
+            except EOFError:
+                self.print("exit", end="")
+                inp = "exit"
+            except KeyboardInterrupt:
+                self.print()
+        self.history.append(inp)
+        return inp
 
+    def print(self, *args, **kwargs):
+        print(*args, **kwargs)
+    

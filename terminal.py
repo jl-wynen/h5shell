@@ -82,16 +82,6 @@ class Terminal:
     def __init__(self):
         self.history = self.History()
         self.prompt = "$ "
-
-    def activate(self):
-        """Prime the terminal for input. Returns a context manager for the terminal."""
-        class TermMngr:
-            def __enter__(self):
-                pass
-            def __exit__(self, exc_type, exc_value, traceback):
-                return False
-            
-        return TermMngr()
     
     def get_input(self):
         """

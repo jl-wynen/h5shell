@@ -78,9 +78,7 @@ class VT100(Terminal):
             if amt == 1:
                 self.print(chr(ASCII.ESC)+"[D", end="")
             else:
-                # TODO why doesnt this work?
-                # self.print(chr(ASCII.ESC)+"[{}D".format(amt), end="")
-                self.print((chr(ASCII.ESC)+"[D")*-amt, end="")
+                self.print(chr(ASCII.ESC)+"[{}D".format(amt), end="")
 
     def _move_cursor_right(self, amt=1):
         """Shift cursor right by amt."""
@@ -91,9 +89,7 @@ class VT100(Terminal):
             if amt == 1:
                 self.print(chr(ASCII.ESC)+"[C", end="")
             else:
-                # TODO
-                # self.print(chr(ASCII.ESC)+"[{}D".format(amt), end="")
-                self.print((chr(ASCII.ESC)+"[D")*amt, end="")
+                self.print(chr(ASCII.ESC)+"[{}D".format(amt), end="")
 
     def _clear_output_from_cursor(self):
         """Erase all printed output to the right of cursor. Does not change _inStr"""
@@ -154,13 +150,11 @@ class VT100(Terminal):
         if self._cursor > 0:
             left = self._inStr[:self._cursor-1]
             right = self._inStr[self._cursor:]
-            self._inStr = left+right
+            self._inStr = left
 
-            # move cursor left one, remove everything after it, and print right
-            # this moves cursor to end of line
-            self.print(chr(ASCII.ESC)+"[D"+chr(ASCII.ESC)+"[K"+right, end="")
-            self._cursor += len(right)-1
-            # move cursor back
+            self._move_cursor_left()
+            self._clear_output_from_cursor()
+            self._insert(right)
             self._move_cursor_left(len(right))
 
     def _do_autocomplete(self):

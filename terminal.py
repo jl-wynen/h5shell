@@ -33,7 +33,7 @@ class Terminal:
             if self._histPtr == 0:
                 raise IndexError("Tried to go beyond start of history.")
             if self._histPtr == len(self._history):
-                self.current = current
+                self._current = current
             self._histPtr -= 1
             return self._history[self._histPtr]
 

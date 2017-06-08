@@ -184,10 +184,18 @@ class VT100(Terminal):
         pass
 
     def _insert(self, s):
-        """Insert a string into the input; adjust cursor"""
-        self._inStr += s
-        self._cursor += len(s)
-        self.print(s, end="")
+        """Insert a string into the input at cursor; adjust cursor"""
+
+        # modify internal string
+        left = self._inStr[:self._cursor]
+        right = self._inStr[self._cursor:]
+        self._inStr = left+s+right
+
+        # display
+        # don't clear, just overwrite
+        self.print(s+right, end="")
+        self._cursor = len(self._inStr)
+        self._move_cursor_left(len(right))
     
     def _default_input_handle(self, c):
         """

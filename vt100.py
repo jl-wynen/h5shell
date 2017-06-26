@@ -2,6 +2,12 @@ import sys
 import termios
 import tty
 
+try:
+    import psutil
+    have_psutil = True
+except ImportError:
+    have_psutil = False
+
 from ascii_codes import ASCII
 from terminal import Terminal
 
@@ -22,23 +28,27 @@ class VT100(Terminal):
         # function to handle a single character of input
         self._handle_input = self._default_input_handle
 
-        # mapps special input character codes to functions that do soemthing appropriately
-        self._do = {
-            ASCII.ETX: self._do_abort,
-            ASCII.EOT: self._do_exit,
-            ASCII.BS:  self._do_delete_backwards,
-            ASCII.TAB: self._do_autocomplete,
-            ASCII.LF:  self._do_enter,
-            ASCII.VT:  self._do_enter,
-            ASCII.FF:  self._do_enter,
-            ASCII.CR:  self._do_enter,
-            ASCII.ESC: self._do_escape_sequence,
-            ASCII.DEL: self._do_delete_backwards
-        }
-        # ignore all other ASCII control codes
-        for key in [0,1,2,5,6,7]+list(range(14,27))+list(range(28,32)):
+        # maps special input character codes to functions that do soemthing appropriately
+        self._do = {}
+
+        # ignore all ASCII control codes by default
+        for key in range(32):
             self._do[key] = self._do_ignore
 
+        # set used control codes
+        self._do[ASCII.ETX] = self._do_abort
+        self._do[ASCII.EOT] = self._do_exit
+        self._do[ASCII.BS]  = self._do_delete_backwards
+        self._do[ASCII.TAB] = self._do_autocomplete
+        self._do[ASCII.LF]  = self._do_enter
+        self._do[ASCII.VT]  = self._do_enter
+        self._do[ASCII.FF]  = self._do_enter
+        self._do[ASCII.CR]  = self._do_enter
+        self._do[ASCII.ESC] = self._do_escape_sequence
+        self._do[ASCII.DEL] = self._do_delete_backwards
+        if have_psutil:
+            self._do[ASCII.SUB] = self._do_suspend
+            
         # maps escape sequences to some functions
         self._do_esc = {
             "[A": self._do_up,
@@ -130,7 +140,32 @@ class VT100(Terminal):
     def _do_left(self):
         """Handle 'cursor left' command. Simply shifts cursor."""
         self._move_cursor_left()
-    
+
+    def _do_suspend(self):
+        """
+        Suspend the shell process.
+        Only works if psutil module is available.
+        """
+
+        # cleanly hand over the terminal
+        if self._rawMode:
+            self._reset()
+            backToRaw = True
+        else:
+            backToRaw = False
+        currentCursor = self._cursor
+
+        # suspend the current process (requires psutil)
+        p = psutil.Process()
+        p.suspend()
+
+        # re-initialize terminal
+        if backToRaw:
+            self._raw_mode()
+        self.print(self.prompt+self._inStr, end="")
+        self._cursor = len(self._inStr)
+        self._move_cursor_left(len(self._inStr)-currentCursor)
+        
     def _do_abort(self):
         """Abort and clear current input; reprint prompt."""
         self.print("^C")

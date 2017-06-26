@@ -7,5 +7,6 @@ class ASCII:
     VT  = 11  # vertical tab
     FF  = 12  # form feed (new page)
     CR  = 13  # carriage return (enter)
+    SUB = 26  # substitute ctrl+z
     ESC = 27  # starts escape sequence
     DEL = 127 # backspace gives this

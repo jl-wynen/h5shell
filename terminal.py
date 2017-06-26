@@ -104,4 +104,6 @@ class Terminal:
     def print(self, *args, **kwargs):
         """Print something to the terminal."""
         print(*args, **kwargs)
-    
+
+    def get_width(self):
+        return 100

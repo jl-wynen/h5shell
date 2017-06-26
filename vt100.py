@@ -1,4 +1,5 @@
 import sys
+import os
 import termios
 import tty
 
@@ -310,4 +311,7 @@ class VT100(Terminal):
             print(*args, end=end, **kwargs)
             
         sys.stdout.flush()
-        
+
+    def get_width(self):
+        nrows, ncols = os.popen("stty size", "r").read().split()
+        return int(ncols)

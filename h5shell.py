@@ -1,17 +1,18 @@
 import argparse
 
 from shell import Shell
+from util import *
 
 try:
     from vt100 import VT100 as Term
 except ImportError:
     from terminal import Terminal as Term
 
-def split_args(args):
-    return [s for s in
-            re.split(r"([\w(\\.)]+|(?P<quote>[\"'])(?:\\.|[^(?P=quote)])*(?P=quote))",
-                     args)
-            if s and s.strip() and s != "'" and s != '"']
+# def split_args(args):
+#     return [s for s in
+#             re.split(r"([\w(\\.)]+|(?P<quote>[\"'])(?:\\.|[^(?P=quote)])*(?P=quote))",
+#                      args)
+#             if s and s.strip() and s != "'" and s != '"']
 
     
 
@@ -23,6 +24,7 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     fname = args.FILE
+
     
     shell = Shell(Term())
     shell.run(fname)

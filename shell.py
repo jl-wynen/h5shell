@@ -1,5 +1,5 @@
 import shlex
-import h5py as h5
+from h5manager import H5Manager
 
 from commands import *
             
@@ -9,7 +9,7 @@ class Shell:
         self._term = term
 
         self._cmds = {
-            "ls": ls.ls(self._term)
+            "ls": ls.ls()
         }
 
     def _set_prompt(self):
@@ -23,18 +23,17 @@ class Shell:
         self._fname = fname
         self._wd = []
 
-        with h5.File("./test.h5", "r+") as f:
-            self._wg = f
+        mngr = H5Manager(fname)
+
+        while True:
+            self._set_prompt()
+            inp = shlex.split(self._term.get_input())
             
-            while True:
-                self._set_prompt()
-                inp = shlex.split(self._term.get_input())
+            if inp and inp[0].strip() == "exit":
+                break
             
-                if inp and inp[0].strip() == "exit":
-                    break
-                
-                try:
-                    self._cmds[inp[0]](inp[1:], self._wg)
-                except KeyError:
-                    self._term.print("h5shell: {}: command not found".format(inp[0]))
+            try:
+                self._cmds[inp[0]](inp[1:], self._wd, mngr, self._term)
+            except KeyError:
+                self._term.print("h5shell: {}: command not found".format(inp[0]))
 

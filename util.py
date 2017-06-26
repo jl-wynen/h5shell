@@ -1,6 +1,6 @@
 def table_layout(lens, maxWidth, separatorLength=1):
     """
-    Builds a 2 dimensional table layout for 1 dimensional data.
+    Build a 2 dimensional table layout for 1 dimensional data.
 
     The table is layed out in column major order such that the given items
     fit into the given maximum width. If Items do not fit, the returned
@@ -50,10 +50,9 @@ def table_layout(lens, maxWidth, separatorLength=1):
     # fallback if items do not fit
     return [[max(lens)]]*N
 
-
 def print_table(strs, maxWidth, separator=" ", prnt=print):
     """
-    Prints a table of strings.
+    Print a table of strings.
 
     Args:
         strs (:obj:`list` of :obj:`str`): Strings to print.
@@ -68,3 +67,22 @@ def print_table(strs, maxWidth, separator=" ", prnt=print):
     for i in range(m):
         prnt(separator.join("{{:<{:d}}}".format(widths[i][j]).format(strs[j*m+i])
                             for j in range(len(widths[i]))))
+
+# TODO detect escapes etc
+def split_path(pathStr):
+    """Split a path given as a string to form a list."""
+    return pathStr.split("/")
+
+def absolute_path(path):
+    """Return an absolute path by resulvong '.' and '..' in the argument."""
+    result = []
+    for i in range(len(path)):
+        if path[i] == ".":
+            continue
+        elif path[i] == "..":
+            if len(result) > 0:  # just ignore it if moving out of file
+                result = result[:-1]
+        else:
+            result.append(path[i])
+
+    return result

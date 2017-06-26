@@ -78,7 +78,27 @@ class Terminal:
                 return "\r\n ".join("{:s}".format(item)
                                for item in self._history)
 
-            
+
+    class Colour:
+        black  = 30
+        red    = 31
+        green  = 32
+        yellow = 33
+        blue   = 34
+        purple = 35
+        cyan   = 36
+        white  = 37
+
+        iblack  = 90
+        ired    = 91
+        igreen  = 92
+        iyellow = 93
+        iblue   = 94
+        ipurple = 95
+        icyan   = 96
+        iwhite  = 97
+
+    
     def __init__(self):
         self.history = self.History()
         self.prompt = "$ "
@@ -94,7 +114,7 @@ class Terminal:
             try:
                 inp = input(self.prompt)
             except EOFError:  # entered EOF (ctrl+d)
-                self.print("exit", end="")
+                self.print("exit")
                 inp = "exit"
             except KeyboardInterrupt:  # pressed ctrl+c
                 self.print()
@@ -107,3 +127,6 @@ class Terminal:
 
     def get_width(self):
         return 100
+
+    def coloured(self, string, colour):
+        return string

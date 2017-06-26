@@ -315,3 +315,6 @@ class VT100(Terminal):
     def get_width(self):
         nrows, ncols = os.popen("stty size", "r").read().split()
         return int(ncols)
+
+    def coloured(self, string, colour):
+        return chr(ASCII.ESC)+"["+str(colour)+"m"+string+chr(ASCII.ESC)+"[0m"

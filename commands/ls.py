@@ -1,6 +1,6 @@
 from . import command
 
-from util import print_table, split_path, absolute_path
+from util import table_layout, split_path, absolute_path
 
 class ls(command.Command):
     def __init__(self):
@@ -33,9 +33,34 @@ class ls(command.Command):
                     self._print_plain(items, term)
 
     def _print_plain(self, items, term):
-        print_table(list(items.keys()), term.get_width(), "  ", term.print)
+        """Print table of H5 items."""
+        
+        # build layout using just the names
+        separator = "   "
+        widths = table_layout([len(s) for s in items], term.get_width(), len(separator))
+        m = len(widths)
+
+        # build new list containing the colour codes
+        strs = []
+        for name, item in items.items():
+            if item.kind == item.Kind.group:
+                strs.append(term.coloured(name, term.Colour.iblue)+"/")
+            elif item.kind == item.Kind.softLink:
+                strs.append(term.coloured(name, term.Colour.icyan)+"@")
+            elif item.kind == item.Kind.externalLink:
+                strs.append(term.coloured(name, term.Colour.cyan)+"@")
+            else:
+                strs.append(name)
+
+        # print it
+        for i in range(m):
+            term.print(separator.join("{{:<{:d}}}".format(widths[i][j]).format(strs[j*m+i])
+                                      for j in range(len(widths[i]))))
 
     def _print_list(self, items, term):
+        """Print detailled list of H5 items, one item per row."""
+        
+        # make space for the name
         nameWidth = max(map(len, items.keys()))
         nameFmt = "{{:<{:d}}}".format(nameWidth)
         
@@ -44,11 +69,14 @@ class ls(command.Command):
                 term.print(nameFmt.format(name)+"      {"
                            +", ".join(str(x) for x in item.shape)+"} ("+str(item.dtype)+")")
             elif item.kind == item.Kind.group:
-                term.print(nameFmt.format(name+"/"))
+                term.print(nameFmt.format(term.coloured(name, term.Colour.iblue)+"/"))
             elif item.kind == item.Kind.softLink:
-                term.print(nameFmt.format(name)+"  ->  "+item.target)
+                term.print(term.coloured(nameFmt.format(name), term.Colour.icyan)
+                           +"  ->  "+item.target)
             elif item.kind == item.Kind.externalLink:
-                term.print(nameFmt.format(name)+"  ->  "+"//".join(item.target))
+                term.print(term.coloured(nameFmt.format(name), term.Colour.cyan)
+                           +"  ->  "+term.coloured(item.target[0], term.Colour.iwhite)
+                           +"//"+item.target[1])
             elif item.kind == item.Kind.hardLink:
                 raise NotImplemented
             

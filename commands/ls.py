@@ -16,7 +16,8 @@ class ls(command.Command):
             return
 
         for f in pa.file:
-            print("'"+f+"'")
+            # TODO detect groups and print their name iff there is more than one file parameter
+            # print("'"+f+"'")
 
             path = absolute_path(wd + split_path(f))
 
@@ -34,49 +35,80 @@ class ls(command.Command):
 
     def _print_plain(self, items, term):
         """Print table of H5 items."""
-        
-        # build layout using just the names
-        separator = "   "
-        widths = table_layout([len(s) for s in items], term.get_width(), len(separator))
-        m = len(widths)
 
-        # build new list containing the colour codes
-        strs = []
-        for name, item in items.items():
-            if item.kind == item.Kind.group:
-                strs.append(term.coloured(name, term.Colour.iblue)+"/")
-            elif item.kind == item.Kind.softLink:
-                strs.append(term.coloured(name, term.Colour.icyan)+"@")
-            elif item.kind == item.Kind.externalLink:
-                strs.append(term.coloured(name, term.Colour.cyan)+"@")
-            else:
-                strs.append(name)
+        nameStrs, nameLens, _ = self._compile_data(items, term)
+        
+        # build layout w/o respecting colour codes
+        separator = "   "
+        widths = table_layout(nameLens, term.get_width(), len(separator))
+        nrow = len(widths)
 
         # print it
-        for i in range(m):
-            term.print(separator.join("{{:<{:d}}}".format(widths[i][j]).format(strs[j*m+i])
+        for i in range(nrow):
+            term.print(separator.join(nameStrs[j*nrow+i]
+                                      +" "*(widths[i][j]-nameLens[j*nrow+i]) # fill in space
                                       for j in range(len(widths[i]))))
 
     def _print_list(self, items, term):
-        """Print detailled list of H5 items, one item per row."""
+        """Print detailed list of H5 items, one item per row."""
+
+        nameStrs, nameLens, details = self._compile_data(items, term)
+        maxNameLen = max(nameLens)
+        for i in range(len(nameStrs)):
+            term.print(nameStrs[i]+" "*(maxNameLen-nameLens[i])+details[i])
+
+    def _compile_data(self, items, term):
+        """
+        Sort items, attach colour codes and build detailled information.
+        Returns:
+            Tuple of list of names with colour codes, list of name lengths w/o
+            colour codes, and list of detailled information.
+        """
         
-        # make space for the name
-        nameWidth = max(map(len, items.keys()))
-        nameFmt = "{{:<{:d}}}".format(nameWidth)
-        
-        for name, item in items.items():
+        nameStrs = []  # the string to be printed
+        nameLens = []  # length of string without colour codes
+        details = []   # extra stuff to be printed after names
+
+        # build lists
+        for name, item in sorted(items.items()):
             if item.kind == item.Kind.dataset:
-                term.print(nameFmt.format(name)+"      {"
-                           +", ".join(str(x) for x in item.shape)+"} ("+str(item.dtype)+")")
+                nameStr, nameLen = self._format_dataset_name(name, term)
+                detail = "      {"+", ".join(str(x) for x in item.shape) \
+                         +"} ("+str(item.dtype)+")"
             elif item.kind == item.Kind.group:
-                term.print(nameFmt.format(term.coloured(name, term.Colour.iblue)+"/"))
+                nameStr, nameLen = self._format_group_name(name, term)
+                detail = ""
             elif item.kind == item.Kind.softLink:
-                term.print(term.coloured(nameFmt.format(name), term.Colour.icyan)
-                           +"  ->  "+item.target)
+                nameStr, nameLen = self._format_softlink_name(name, term)
+                detail = "  ->  "+item.target
             elif item.kind == item.Kind.externalLink:
-                term.print(term.coloured(nameFmt.format(name), term.Colour.cyan)
-                           +"  ->  "+term.coloured(item.target[0], term.Colour.iwhite)
-                           +"//"+item.target[1])
+                nameStr, nameLen = self._format_externallink_name(name, term)
+                detail = "  ->  "+term.coloured(item.target[0], term.Colour.iwhite) \
+                         +"//"+item.target[1]
             elif item.kind == item.Kind.hardLink:
-                raise NotImplemented
-            
+                raise NotImplemented  # TODO
+
+            nameStrs.append(nameStr)
+            nameLens.append(nameLen)
+            details.append(detail)
+
+        return (nameStrs, nameLens, details)
+
+    def _format_dataset_name(self, name, term):
+        """Returns name with colour codes and length w/o them for datasets."""
+        return (name, len(name))
+
+    def _format_group_name(self, name, term):
+        """Returns name with colour codes and length w/o them for groups."""
+        return (term.coloured(name, term.Colour.iblue)+"/",
+                len(name)+1)
+
+    def _format_softlink_name(self, name, term):
+        """Returns name with colour codes and length w/o them for soft links."""
+        return (term.coloured(name, term.Colour.icyan)+"@",
+                len(name)+1)
+
+    def _format_externallink_name(self, name, term):
+        """Returns name with colour codes and length w/o them for external links."""
+        return (term.coloured(name, term.Colour.cyan)+"@",
+                len(name)+1)

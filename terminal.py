@@ -1,3 +1,5 @@
+import shutil
+
 class Terminal:
     """
     Fallback terminal manager.
@@ -126,7 +128,7 @@ class Terminal:
         print(*args, **kwargs)
 
     def get_width(self):
-        return 100
+        return shutil.get_terminal_size().columns
 
     def coloured(self, string, colour):
         return string

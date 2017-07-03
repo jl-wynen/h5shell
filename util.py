@@ -67,22 +67,3 @@ def print_table(strs, maxWidth, separator=" ", prnt=print):
     for i in range(m):
         prnt(separator.join("{{:<{:d}}}".format(widths[i][j]).format(strs[j*m+i])
                             for j in range(len(widths[i]))))
-
-# TODO detect escapes etc
-def split_path(pathStr):
-    """Split a path given as a string to form a list."""
-    return pathStr.split("/")
-
-def absolute_path(path):
-    """Return an absolute path by resulvong '.' and '..' in the argument."""
-    result = []
-    for i in range(len(path)):
-        if path[i] == ".":
-            continue
-        elif path[i] == "..":
-            if len(result) > 0:  # just ignore it if moving out of file
-                result = result[:-1]
-        else:
-            result.append(path[i])
-
-    return result

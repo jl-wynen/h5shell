@@ -67,3 +67,29 @@ def print_table(strs, maxWidth, separator=" ", prnt=print):
     for i in range(m):
         prnt(separator.join("{{:<{:d}}}".format(widths[i][j]).format(strs[j*m+i])
                             for j in range(len(widths[i]))))
+
+        
+def abspath(wd, path):
+    """
+    Turn path into an absolute path based on working directory wd.
+    wd must already be an absolute path.
+    """
+
+    if not path:          # empty -> just wd
+        result = wd[:]
+    elif path[0] == "/":  # path relative to root
+        result = []
+        path = path[1:]
+    else:                 # path relative to wd
+        result = wd[:]
+
+    for i, p in enumerate(path):
+        if p == ".":
+            continue
+        elif p == "..":
+            if result:  # just ignore it if moving out of file
+                result = result[:-1]
+        else:
+            result.append(path[i])
+
+    return result

@@ -12,6 +12,7 @@ except ImportError:
 from ascii_codes import ASCII
 from terminal import Terminal
 
+# TODO add delete forwards
 class VT100(Terminal):
     """
     Manager for VT100 emulators.
@@ -313,4 +314,7 @@ class VT100(Terminal):
         sys.stdout.flush()
 
     def coloured(self, string, colour):
+        """
+        Return string with colour codes attached based on given colour (Terminal.Colour).
+        """
         return chr(ASCII.ESC)+"["+str(colour)+"m"+string+chr(ASCII.ESC)+"[0m"

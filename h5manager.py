@@ -1,9 +1,25 @@
 from enum import Enum
+import fnmatch
+from posixpath import split, normpath
+import os.path
+import calendar
+import time
 
 import h5py as h5
 
+from util import abspath
+
 class H5Item:
+    """
+    Represent one HDF5 item. Which members are meaningful depends on the items kind:
+    - dataset: name, kind, shape, dtype
+    - group: name, kind, children
+    - hardLink, softLink: name, kind, target path (string)
+    - externalLink: name, kind, target (tuple of filename and path (string) inside that file)
+    """
+    
     class Kind(Enum):
+        """Kinds of possible items."""
         dataset      = 0
         group        = 1
         hardLink     = 2
@@ -20,19 +36,34 @@ class H5Item:
         self.dtype = dtype
 
 class H5Manager:
+    """
+    Path strings are named spath, ...
+    Path lists are named path, ...
+    """
     def __init__(self, fname):
         self._fname = fname
         self._cache = {}
+        self._openTime = 0 # time the file was last opened (secs since epoch)
 
         self.read_file()
 
-    def clear_cache(self):
+    def _clear_cache(self):
+        """Empty out the cache"""
         self._cache = {}
 
     def refresh(self):
-        # TODO check modification time
-        self.clear_cache()
-        self.read_file()
+        """Re-read file if it has changed since it was last read."""
+        
+        if os.path.getmtime(self._fname) > self._openTime:
+            self.read_file()
+    
+    def read_file(self):
+        """Read the HDF5 file."""
+        
+        self._clear_cache()
+        with h5.File(self._fname, "r") as f:
+            self._load_to_cache(f, self._cache)
+            self._openTime = calendar.timegm(time.gmtime())
 
     def dump_cache(self, cache = None):
         if not hasattr(self, "indent") or self.indent < 0:
@@ -61,27 +92,57 @@ class H5Manager:
                 print("???")
 
         self.indent -= 4
-                
-    def read_file(self):
-        with h5.File(self._fname, "r") as f:
-            self._load_to_cache(f, self._cache)
-            
-    def _get_group(self, path, cache):
-        if len(path) == 0:
-            return cache
-        else:
-            # raise KeyError if path does not exist
-            if cache[path[0]].kind == H5Item.Kind.group:
-                return self._get_group(path[1:], cache[path[0]].children)
-            else:
-                return {path[0]: cache[path[0]]}
-    
-    def list_contents(self, path):
+
+    def get_items(self, wd, *spaths):
+        """
+        Get all items at given paths.
+        Arguments:
+            wd (:obj:`list`): Working directory.
+            spaths (:obj:`list`): Relative (to wd) paths to items given as strings!
+        Returns:
+        List of tuples (p, d), where d is a dict mapping names to items
+        and p is the path to those items.
+        """
+
         self.refresh()
-        group = self._get_group(path, self._cache)
-        return group
+
+        result = []
+        for spath in spaths:
+            p = abspath(wd, [e for e in split(normpath(spath)) if e])
+            self._get_items(p, self._cache, result, wd)
+        return result
+
+    def _get_items(self, path, cache, result, fullpath):
+        """
+        Recursively collect items.
+        Arguments:
+            path (:obj:`list`): Path to explore.
+            cache (:obj:`dict`): 'Directory' for current working directory.
+            result (:obj:`list`): List of tuples (p, d), where d is a dict mapping names
+                                  to items and p is the path to those items.
+            fullpath (:obj:`list`): Path to items in current iteration (for internal use;
+                                    init with working directory).
+        """
+
+        if not path:
+            # path empty => store everything in cache
+            result.append((fullpath, cache))
+        else:
+            items = {}
+            for name in fnmatch.filter(cache.keys(), path[0]):
+                item = cache[name]
+                if item.kind == item.Kind.group:
+                    # group: explore children and remember group name
+                    self._get_items(path[1:], item.children, result, fullpath+[name])
+                else:
+                    # anything else: remember item
+                    items[name] = item
+            if items:
+                # store all (non-group) items in current path
+                result.append((fullpath, items))
 
     def _load_to_cache(self, group, cache):
+        """Load an HDF5 group and its children into cache."""
         for k in group:
             item = group[k]
             if isinstance(item, h5.Group):

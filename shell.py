@@ -1,12 +1,16 @@
 import shlex
-from h5manager import H5Manager
+import os.path
 
+from h5manager import H5Manager
 from commands import *
-            
+from util import split_path
 
 class Shell:
     def __init__(self, term):
         self._term = term
+        self._fname = ""
+        self._wd = []
+
 
         self._cmds = {
             "ls": ls.ls(),
@@ -14,8 +18,25 @@ class Shell:
             "pwd": pwd.pwd()
         }
 
-    def _set_prompt(self):
-        self._term.prompt = "{file}//{wd} $ ".format(file=self._fname, wd="/".join(self._wd))
+    def _build_prompt(self):
+        """Build prompt for terminal."""
+
+        prompt = ""
+
+        # add file name and path
+        filePath = os.path.split(self._fname)
+        if filePath[0]:
+            prompt += self._term.coloured(filePath[0]+"/", self._term.Colour.iblack)
+        prompt += self._term.coloured(filePath[1], self._term.Colour.yellow)
+
+        # add wd inside file
+        prompt += "//"
+        if self._wd:
+            prompt += "/".join(self._wd[:-1] +
+                               [self._term.coloured(self._wd[-1], self._term.Colour.iwhite)])
+        prompt += " " + self._term.coloured("$", self._term.Colour.iyellow) + " "
+
+        return prompt
 
     def run(self, fname):
         self._fname = fname
@@ -24,8 +45,7 @@ class Shell:
         mngr = H5Manager(fname)
 
         while True:
-            self._set_prompt()
-            inp = shlex.split(self._term.get_input())
+            inp = shlex.split(self._term.get_input(self._build_prompt()))
             
             if inp and inp[0].strip() == "exit":
                 break

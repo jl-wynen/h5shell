@@ -1,3 +1,5 @@
+from posixpath import split
+
 def table_layout(lens, maxWidth, separatorLength=1):
     """
     Build a 2 dimensional table layout for 1 dimensional data.
@@ -60,7 +62,7 @@ def print_table(strs, maxWidth, separator=" ", prnt=print):
         separator (:obj:`str`, optional): String that separates list entries.
         prnt (function, optional): Function to use for printing.
     """
-    
+
     widths = table_layout([len(s) for s in strs], maxWidth, len(separator))
     m = len(widths)
 
@@ -68,7 +70,27 @@ def print_table(strs, maxWidth, separator=" ", prnt=print):
         prnt(separator.join("{{:<{:d}}}".format(widths[i][j]).format(strs[j*m+i])
                             for j in range(len(widths[i]))))
 
-        
+def split_path(spath):
+    """
+    Split a string representing a path into a list.
+    The result can be partly undone by calling '/'.join(split_path(...))
+    up to leading and trailing slashes.
+    A leading slash is returned as an individual list element.
+    Arguments:
+        spath(:obj:`str`) String representing the path.
+    Returns:
+        Split path as list of strings.
+    """
+
+    res = split(spath)  # split into (head, tail)
+    path = [res[1]]  # tail is always completely split
+    if res[0]:
+        if res[0] == "/" or res[0] == "//": # at root
+            path = ["/"] + path
+        else:
+            path = split_path(res[0]) + path  # split head again
+    return path
+
 def abspath(wd, path):
     """
     Turn path into an absolute path based on working directory wd.

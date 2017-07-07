@@ -18,7 +18,7 @@ class VT100(Terminal):
     Manager for VT100 emulators.
     Supports more advanced features than the fallback but must be activated bafore use.
     """
-    
+
     def __init__(self):
         super(VT100, self).__init__()
 
@@ -26,7 +26,8 @@ class VT100(Terminal):
         self._rawMode = False
         self._inStr = ""
         self._cursor = 0 # relative to inStr, not counting prompt
-        
+        self._prompt = "$ "
+
         # function to handle a single character of input
         self._handle_input = self._default_input_handle
 
@@ -164,7 +165,7 @@ class VT100(Terminal):
         # re-initialize terminal
         if backToRaw:
             self._raw_mode()
-        self.print(self.prompt+self._inStr, end="")
+        self.print(self._prompt+self._inStr, end="")
         self._cursor = len(self._inStr)
         self._move_cursor_left(len(self._inStr)-currentCursor)
         
@@ -174,7 +175,7 @@ class VT100(Terminal):
         self._inStr = ""
         self._cursor = 0
         self.history.reset()
-        self.print(self.prompt, end="")
+        self.print(self._prompt, end="")
 
     def _do_exit(self):
         """Returns 'exit' if input is empty."""
@@ -209,7 +210,7 @@ class VT100(Terminal):
             return self._inStr
         else:
             self.print()
-            self.print(self.prompt, end="")
+            self.print(self._prompt, end="")
 
     def _do_escape_sequence(self):
         """Switch state to inputting escape sequence."""
@@ -233,7 +234,7 @@ class VT100(Terminal):
         self.print(s+right, end="")
         self._cursor = len(self._inStr)
         self._move_cursor_left(len(right))
-    
+
     def _default_input_handle(self, c):
         """
         Handle input of single characters via VT100._do.
@@ -245,7 +246,7 @@ class VT100(Terminal):
         except KeyError:
             self._insert(c)
             # no return -> definately not done yet
-        
+
     def _esc_input_handle(self, c):
         """
         Handle input of escape sequences.
@@ -277,18 +278,19 @@ class VT100(Terminal):
             def __exit__(self, exc_type, exc_value, traceback):
                 self.term._reset()
                 return False
-        
+
         self._raw_mode()
         return TermMngr(self)
-            
-    def get_input(self):
+
+    def get_input(self, prompt):
         """
         Query user for input.
         Return:
         The string entered. If the user entered EOF, 'exit' is returned.
         """
+        self._prompt = prompt
         with self._activate():
-            self.print(self.prompt, end="")
+            self.print(self._prompt, end="")
             self._inStr = ""
             self._cursor = 0
             inp = None
@@ -310,7 +312,7 @@ class VT100(Terminal):
                 print(*args, end="", **kwargs)
         else:
             print(*args, end=end, **kwargs)
-            
+
         sys.stdout.flush()
 
     def coloured(self, string, colour):

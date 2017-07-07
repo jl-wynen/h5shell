@@ -103,9 +103,8 @@ class Terminal:
     
     def __init__(self):
         self.history = self.History()
-        self.prompt = "$ "
 
-    def get_input(self):
+    def get_input(self, prompt):
         """
         Query user for input.
         Return:
@@ -114,7 +113,7 @@ class Terminal:
         inp = None
         while not inp:
             try:
-                inp = input(self.prompt)
+                inp = input(prompt)
             except EOFError:  # entered EOF (ctrl+d)
                 self.print("exit")
                 inp = "exit"

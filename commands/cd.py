@@ -4,9 +4,9 @@ Module for cd command.
 
 from . import command
 
-from posixpath import split, normpath
+from posixpath import normpath
 
-from util import abspath
+from util import split_path, abspath
 
 class cd(command.Command):
     """Command to change working directory."""
@@ -25,10 +25,8 @@ class cd(command.Command):
         if not pa:
             return
 
-        path = abspath(wd, [e for e in split(normpath(pa.group)) if e])
-        if path:
-            # root is a group, only checky for other paths
-
+        path = abspath(wd, [e for e in split_path(normpath(pa.group)) if e])
+        if path:  # root is a group, only checky for other paths
             item = h5mngr.get_item(path)
             if not item:
                 term.print("h5sh: cd: {}: No such dataset or group".format("/".join(path)))

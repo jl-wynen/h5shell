@@ -1,13 +1,13 @@
 from enum import Enum
 import fnmatch
-from posixpath import split, normpath
+from posixpath import normpath
 import os.path
 import calendar
 import time
 
 import h5py as h5
 
-from util import abspath
+from util import split_path, abspath
 
 class H5Item:
     """
@@ -108,7 +108,7 @@ class H5Manager:
 
         result = []
         for spath in spaths:
-            p = abspath(wd, [e for e in split(normpath(spath)) if e])
+            p = abspath(wd, [e for e in split_path(normpath(spath)) if e])
             self._get_items(p, self._cache, result, wd)
         return result
 
@@ -122,6 +122,8 @@ class H5Manager:
             Item that was found or None if it does not exist or is root.
         """
 
+        # print("path: ", path)
+        
         if not path:
             # cannot retrieve root object (does not exist)
             return None

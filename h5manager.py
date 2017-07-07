@@ -17,7 +17,7 @@ class H5Item:
     - hardLink, softLink: name, kind, target path (string)
     - externalLink: name, kind, target (tuple of filename and path (string) inside that file)
     """
-    
+
     class Kind(Enum):
         """Kinds of possible items."""
         dataset      = 0
@@ -53,13 +53,13 @@ class H5Manager:
 
     def refresh(self):
         """Re-read file if it has changed since it was last read."""
-        
+
         if os.path.getmtime(self._fname) > self._openTime:
             self.read_file()
-    
+
     def read_file(self):
         """Read the HDF5 file."""
-        
+
         self._clear_cache()
         with h5.File(self._fname, "r") as f:
             self._load_to_cache(f, self._cache)
@@ -68,10 +68,10 @@ class H5Manager:
     def dump_cache(self, cache = None):
         if not hasattr(self, "indent") or self.indent < 0:
             self.indent = 0
-            
+
         if not cache:
             cache = self._cache
-            
+
         for k in cache:
             print(" "*self.indent+"{:<40}".format(k),end="")
             
@@ -100,8 +100,8 @@ class H5Manager:
             wd (:obj:`list`): Working directory.
             spaths (:obj:`list`): Relative (to wd) paths to items given as strings!
         Returns:
-        List of tuples (p, d), where d is a dict mapping names to items
-        and p is the path to those items.
+            List of tuples (p, d), where d is a dict mapping names to items
+            and p is the path to those items.
         """
 
         self.refresh()
@@ -111,6 +111,37 @@ class H5Manager:
             p = abspath(wd, [e for e in split(normpath(spath)) if e])
             self._get_items(p, self._cache, result, wd)
         return result
+
+    def get_item(self, path):
+        """
+        Retrieve one item from the file.
+        The root item cannot be retrieved, instead `None` is returned.
+        Arguments:
+            path (:obj:`list`): Path to item.
+        Returns:
+            Item that was found or None if it does not exist or is root.
+        """
+
+        if not path:
+            # cannot retrieve root object (does not exist)
+            return None
+
+        self.refresh()
+
+        result = []
+        # get parent of requested item
+        self._get_items(path[:-1], self._cache, result, [])
+        if not result:
+            # parent does not exist
+            return None
+
+        items = result[0][1]  # all children of parent item
+        if not items or not path[-1] in items:
+            # there are no children or the one we want is not in there
+            return None
+
+        # found it
+        return items[path[-1]]
 
     def _get_items(self, path, cache, result, fullpath):
         """
@@ -141,6 +172,7 @@ class H5Manager:
                 # store all (non-group) items in current path
                 result.append((fullpath, items))
 
+                
     def _load_to_cache(self, group, cache):
         """Load an HDF5 group and its children into cache."""
         for k in group:

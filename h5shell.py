@@ -14,7 +14,7 @@ except ImportError:
 #                      args)
 #             if s and s.strip() and s != "'" and s != '"']
 
-    
+#TODO use fnmatch.filter for wildcards
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Testing an HDF5 shell")

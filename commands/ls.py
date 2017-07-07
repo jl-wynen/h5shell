@@ -7,6 +7,8 @@ from . import command
 from util import table_layout
 
 class ls(command.Command):
+    """Command to list contents"""
+    
     def __init__(self):
         super(ls, self).__init__()
         

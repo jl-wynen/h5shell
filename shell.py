@@ -9,16 +9,13 @@ class Shell:
         self._term = term
 
         self._cmds = {
-            "ls": ls.ls()
+            "ls": ls.ls(),
+            "cd": cd.cd()
         }
 
     def _set_prompt(self):
         self._term.prompt = "{file}//{wd} $ ".format(file=self._fname, wd="/".join(self._wd))
 
-    def change_directory(self, d):
-        # TODO
-        pass
-        
     def run(self, fname):
         self._fname = fname
         self._wd = []
@@ -35,5 +32,5 @@ class Shell:
             try:
                 self._cmds[inp[0]](inp[1:], self._wd, mngr, self._term)
             except KeyError:
-                self._term.print("h5shell: {}: command not found".format(inp[0]))
+                self._term.print("h5sh: {}: command not found".format(inp[0]))
 

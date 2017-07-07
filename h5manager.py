@@ -74,6 +74,29 @@ class H5Manager:
             self._load_to_cache(f, self._cache)
             self._openTime = calendar.timegm(time.gmtime())
 
+    def _load_to_cache(self, group, cache):
+        """Load an HDF5 group and its children into cache."""
+        for k in group:
+            item = group[k]
+            if isinstance(item, h5.Group):
+                cch = {}
+                self._load_to_cache(item, cch)
+                cache[k] = H5Item(k, H5Item.Kind.group, children=cch)
+            else:
+                # get link class
+                lnk = group.get(k, getlink=True)
+
+                if isinstance(lnk, h5.SoftLink):
+                    cache[k] = H5Item(k, H5Item.Kind.softLink, target=lnk.path)
+                elif isinstance(lnk, h5.ExternalLink):
+                    cache[k] = H5Item(k, H5Item.Kind.externalLink,
+                                      target=(lnk.filename, lnk.path))
+
+                # TODO check for hard links
+                else:
+                    cache[k] = H5Item(k, H5Item.Kind.dataset,
+                                      shape=item.shape, dtype=item.dtype)
+
     def get_items(self, wd, *spaths):
         """
         Get all items at given paths.
@@ -153,26 +176,6 @@ class H5Manager:
                 # store all (non-group) items in current path
                 result.append((fullpath, items))
 
-                
-    def _load_to_cache(self, group, cache):
-        """Load an HDF5 group and its children into cache."""
-        for k in group:
-            item = group[k]
-            if isinstance(item, h5.Group):
-                cch = {}
-                self._load_to_cache(item, cch)
-                cache[k] = H5Item(k, H5Item.Kind.group, children=cch)
-            else:
-                # get link class
-                lnk = group.get(k, getlink=True)
-
-                if isinstance(lnk, h5.SoftLink):
-                    cache[k] = H5Item(k, H5Item.Kind.softLink, target=lnk.path)
-                elif isinstance(lnk, h5.ExternalLink):
-                    cache[k] = H5Item(k, H5Item.Kind.externalLink,
-                                      target=(lnk.filename, lnk.path))
-
-                # TODO check for hard links
-                else:
-                    cache[k] = H5Item(k, H5Item.Kind.dataset,
-                                      shape=item.shape, dtype=item.dtype)
+    def get_file_name(self):
+        """Return the name of the opened file."""
+        return self._fname

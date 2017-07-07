@@ -1,2 +1,2 @@
-__all__ = ["command", "ls", "cd"]
+__all__ = ["command", "ls", "cd", "pwd"]
 

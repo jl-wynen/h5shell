@@ -10,7 +10,8 @@ class Shell:
 
         self._cmds = {
             "ls": ls.ls(),
-            "cd": cd.cd()
+            "cd": cd.cd(),
+            "pwd": pwd.pwd()
         }
 
     def _set_prompt(self):

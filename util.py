@@ -1,3 +1,7 @@
+"""
+Some utility functions that might be useful throughout the project.
+"""
+
 from posixpath import split
 
 def table_layout(lens, maxWidth, separatorLength=1):
@@ -21,7 +25,7 @@ def table_layout(lens, maxWidth, separatorLength=1):
     # i and j are row and column indices, respectively.
     # m and n are number of rows and columns, repsectively.
     #  n does not include columns that are not completely filled.
-    
+
     N = len(lens)
     m = 1
     n = N//m

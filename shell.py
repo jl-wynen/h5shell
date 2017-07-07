@@ -1,9 +1,8 @@
 import shlex
 import os.path
 
-from h5manager import H5Manager
 from commands import *
-from util import split_path
+from h5manager import H5Manager
 
 class Shell:
     def __init__(self, term):
@@ -11,11 +10,15 @@ class Shell:
         self._fname = ""
         self._wd = []
 
-
         self._cmds = {
             "ls": ls.ls(),
             "cd": cd.cd(),
             "pwd": pwd.pwd()
+        }
+
+        self._aliases = {
+            "..": "cd ..",
+            "l": "ls -l"
         }
 
     def _build_prompt(self):
@@ -42,15 +45,24 @@ class Shell:
         self._fname = fname
         self._wd = []
 
+        # 'open' the file
         mngr = H5Manager(fname)
 
         while True:
             inp = shlex.split(self._term.get_input(self._build_prompt()))
-            
+
+            # special treatment for exit
             if inp and inp[0].strip() == "exit":
                 break
-            
+
             try:
+                # turn aliases into normal commands
+                inp = shlex.split(self._aliases[inp[0]]) + inp[1:]
+            except KeyError:
+                pass
+
+            try:
+                # execute command
                 self._cmds[inp[0]](inp[1:], self._wd, mngr, self._term)
             except KeyError:
                 self._term.print("h5sh: {}: command not found".format(inp[0]))

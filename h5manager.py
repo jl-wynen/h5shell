@@ -1,9 +1,14 @@
+"""
+Backend to manage HDF5 files.
+"""
+
 from enum import Enum
 import fnmatch
 from posixpath import normpath
 import os.path
 import calendar
 import time
+import sys
 
 import h5py as h5
 
@@ -37,9 +42,9 @@ class H5Item:
 
 class H5Manager:
     """
-    Path strings are named spath, ...
-    Path lists are named path, ...
+    Provides basic operations on HDF5 files.
     """
+
     def __init__(self, fname):
         self._fname = fname
         self._cache = {}
@@ -54,8 +59,12 @@ class H5Manager:
     def refresh(self):
         """Re-read file if it has changed since it was last read."""
 
-        if os.path.getmtime(self._fname) > self._openTime:
-            self.read_file()
+        try:
+            if os.path.getmtime(self._fname) > self._openTime:
+                self.read_file()
+        except FileNotFoundError:
+            print("Error: file '{}' was removed.".format(self._fname))
+            sys.exit(1)
 
     def read_file(self):
         """Read the HDF5 file."""
@@ -64,34 +73,6 @@ class H5Manager:
         with h5.File(self._fname, "r") as f:
             self._load_to_cache(f, self._cache)
             self._openTime = calendar.timegm(time.gmtime())
-
-    def dump_cache(self, cache = None):
-        if not hasattr(self, "indent") or self.indent < 0:
-            self.indent = 0
-
-        if not cache:
-            cache = self._cache
-
-        for k in cache:
-            print(" "*self.indent+"{:<40}".format(k),end="")
-            
-            if cache[k].kind == H5Item.Kind.dataset:
-                print("dset")
-            elif cache[k].kind == H5Item.Kind.group:
-                print("group")
-                if cache[k].children:
-                    self.indent += 4
-                    self.dump_cache(cache[k].children)
-            elif cache[k].kind == H5Item.Kind.hardLink:
-                print("hardLink to " + str(cache[k].target))
-            elif cache[k].kind == H5Item.Kind.softLink:
-                print("softLink to " + str(cache[k].target))
-            elif cache[k].kind == H5Item.Kind.externalLink:
-                print("extLink to " + cache[k].target[0] + "//" + cache[k].target[1])
-            else:
-                print("???")
-
-        self.indent -= 4
 
     def get_items(self, wd, *spaths):
         """
@@ -121,8 +102,6 @@ class H5Manager:
         Returns:
             Item that was found or None if it does not exist or is root.
         """
-
-        # print("path: ", path)
         
         if not path:
             # cannot retrieve root object (does not exist)

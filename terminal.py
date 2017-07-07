@@ -100,7 +100,7 @@ class Terminal:
         icyan   = 96
         iwhite  = 97
 
-    
+
     def __init__(self):
         self.history = self.History()
 

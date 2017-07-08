@@ -23,8 +23,13 @@ VERSION = "1.0"
 
 def parse_args():
     """Parse command line arguments for h5sh."""
+
+    class VersionAction(argparse.Action):
+        def __call__(self, parser, values, namespace, option_string):
+            print("h5sh "+VERSION)
+            parser.exit()
+
     parser = argparse.ArgumentParser(prog="h5sh",
-                                     # formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="""
                                      Interactive shell for HDF5 files.
                                      h5sh tries to mimic the behaviour of
@@ -32,8 +37,11 @@ def parse_args():
                                      functionality. To see a list of available commands,
                                      type 'help' in a running shell.
                                      """,
-                                     epilog="TODO URL goes here")
+                                     epilog="See https://github.com/jl-wynen/h5shell\
+                                     for more information.")
     parser.add_argument("FILE", help="HDF5 file to open")
+    parser.add_argument("--version", nargs=0, action=VersionAction,
+                        help="Show the version number")
     return parser.parse_args()
 
 
@@ -73,9 +81,13 @@ Currently opened file: '{fname}'
 
 Available commands:
    exit, {commands}
+
+Aliases:
+   {aliases}
+
 Use option --help on a command to see a description.
 """.format(version=VERSION, fname=h5mngr.get_file_name(),
-           commands=", ".join(self._cmds.keys()))
+           commands=", ".join(self._cmds.keys()), aliases=", ".join(self._aliases.keys()))
 
         if TERM_KIND == "VT100":
             helpStr += \
@@ -90,7 +102,7 @@ The terminal backend is fallback; only basic input is available.
 
         helpStr += \
 """
-For more information visit TODO URL\
+For more information visit https://github.com/jl-wynen/h5shell\
 """
 
         term.print(helpStr)

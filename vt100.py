@@ -1,3 +1,7 @@
+"""
+Module for the VT100 backend.
+"""
+
 import sys
 import os
 import termios
@@ -12,7 +16,6 @@ except ImportError:
 from ascii_codes import ASCII
 from terminal import Terminal
 
-# TODO add delete forwards
 class VT100(Terminal):
     """
     Manager for VT100 emulators.
@@ -24,6 +27,7 @@ class VT100(Terminal):
 
         self.inFD = sys.stdin.fileno()
         self._rawMode = False
+        self._oldattrs = None
         self._inStr = ""
         self._cursor = 0 # relative to inStr, not counting prompt
         self._prompt = "$ "
@@ -57,7 +61,8 @@ class VT100(Terminal):
             "[A": self._do_up,
             "[B": self._do_down,
             "[C": self._do_right,
-            "[D": self._do_left
+            "[D": self._do_left,
+            "[3~": self._do_delete_forwards
         }
 
     def _raw_mode(self):
@@ -67,7 +72,7 @@ class VT100(Terminal):
         Must be switched back before the program terminates!
         See VT100._reset() and VT100.activate().
         """
-        
+
         self._oldattrs = termios.tcgetattr(self.inFD)
         try:
             tty.setraw(self.inFD)
@@ -76,12 +81,12 @@ class VT100(Terminal):
             self.print("Unable to switch terminal to raw mode.")
             termios.tcsetattr(self.inFD, termios.TCSADRAIN, self._oldattrs)
             raise
-        
+
     def _reset(self):
         """Reset the terminal to its previous state before calling VT100._raw_mode()."""
         termios.tcsetattr(self.inFD, termios.TCSADRAIN, self._oldattrs)
         self._rawMode = False
-    
+
     def _move_cursor_left(self, amt=1):
         """Shift cursor left by amt."""
         if amt == 0:
@@ -115,7 +120,7 @@ class VT100(Terminal):
             if self._cursor > 0:
                 self._move_cursor_left(self._cursor)
             self._clear_output_from_cursor()
-                
+
     def _do_up(self):
         """Handle 'cursor up' command. Navigates history."""
         try:
@@ -168,7 +173,7 @@ class VT100(Terminal):
         self.print(self._prompt+self._inStr, end="")
         self._cursor = len(self._inStr)
         self._move_cursor_left(len(self._inStr)-currentCursor)
-        
+
     def _do_abort(self):
         """Abort and clear current input; reprint prompt."""
         self.print("^C")
@@ -182,7 +187,7 @@ class VT100(Terminal):
         if not self._inStr:
             self.print("exit")
             return "exit"
-            
+
     def _do_delete_backwards(self):
         """Remove one character before the cursor."""
         if self._cursor > 0:
@@ -191,6 +196,17 @@ class VT100(Terminal):
             self._inStr = left
 
             self._move_cursor_left()
+            self._clear_output_from_cursor()
+            self._insert(right)
+            self._move_cursor_left(len(right))
+
+    def _do_delete_forwards(self):
+        """Remove one character after the cursor."""
+        if self._cursor < len(self._inStr):
+            left = self._inStr[:self._cursor]
+            right = self._inStr[self._cursor+1:]
+            self._inStr = left
+
             self._clear_output_from_cursor()
             self._insert(right)
             self._move_cursor_left(len(right))
@@ -304,7 +320,7 @@ class VT100(Terminal):
         The built in print function does not work properly when in raw mode.
         """
         if self._rawMode:
-            outp = [s.replace("\n", "\n\r") if isinstance(s,str) else s for s in args]
+            outp = [s.replace("\n", "\n\r") if isinstance(s, str) else s for s in args]
             if end:
                 # need explicit carriage return
                 print(*outp, end=end+"\r", **kwargs)

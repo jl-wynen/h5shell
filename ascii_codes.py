@@ -1,4 +1,10 @@
+"""
+Module for ASCII codes.
+"""
+
 class ASCII:
+    """Contains needed ASCII control codes."""
+    
     ETX = 3   # end of text (ctrl+c)
     EOT = 4   # end of transmission (ctrl+d)
     BS  = 8   # backspace

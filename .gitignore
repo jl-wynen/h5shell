@@ -2,6 +2,12 @@
 __pychache__
 *.pyc
 
+# setuptools
+build
+dist
+*.egg-info
+*.egg
+
 # HDF5 files
 *.h5
 *.hdf5

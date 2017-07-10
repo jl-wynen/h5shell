@@ -1,5 +1,5 @@
 """
-Contains the shell and serves as main program to execute.
+Contains the shell.
 """
 
 import argparse
@@ -8,6 +8,7 @@ import os.path
 
 from commands import *
 from h5manager import H5Manager
+
 
 # import best available terminal backend
 try:
@@ -45,13 +46,13 @@ def parse_args():
     return parser.parse_args()
 
 
-class H5sh:
+class H5shell:
     """
     The actual shell which glues all pieces together.
     """
 
-    def __init__(self, term):
-        self._term = term
+    def __init__(self):
+        self._term = Term()
         self._wd = []
 
         # dict of available commands
@@ -93,7 +94,7 @@ class H5sh:
 
         return prompt
 
-    def run(self, fname):
+    def run(self):
         """
         Main REPL to run the shell.
         """
@@ -101,7 +102,7 @@ class H5sh:
         self._wd = []
 
         # 'open' the file
-        h5mngr = H5Manager(fname)
+        h5mngr = H5Manager(parse_args().FILE)
 
         while True:
             inp = shlex.split(self._term.get_input(self._build_prompt(h5mngr)))
@@ -121,8 +122,3 @@ class H5sh:
                 self._cmds[inp[0]](inp[1:], self._wd, h5mngr, self._term)
             except KeyError:
                 self._term.print("h5sh: {}: command not found".format(inp[0]))
-
-
-if __name__ == "__main__":
-    # run the shells REPL
-    H5sh(Term()).run(parse_args().FILE)

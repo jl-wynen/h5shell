@@ -60,13 +60,15 @@ class H5sh:
             "cd": cd.cd(),
             "pwd": pwd.pwd(),
             "open": open_file.open_file(),
+            "ext": run_external.run_external(),
             "help": self._show_help
         }
 
         # dict of aliases (evaluated before _cmds)
         self._aliases = {
             "..": "cd ..",
-            "l": "ls -l"
+            "l": "ls -l",
+            "-": "ext"
         }
 
     def _show_help(self, args, wd, h5mngr, term):

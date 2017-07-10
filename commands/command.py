@@ -51,3 +51,6 @@ class Command:
             except self.ExitParser:
                 # just keep going
                 return None
+
+    def get_description(self):
+        return self._parser.description

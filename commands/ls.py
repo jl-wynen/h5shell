@@ -7,16 +7,16 @@ from . import command
 from util import table_layout
 
 class ls(command.Command):
-    """Command to list contents"""
-    
+    """Command to list items"""
+
     def __init__(self):
         super(ls, self).__init__()
-        
-        self._parser = command.Command.Parser(description="List information about the items (the current group by default).")
+
+        self._parser = command.Command.Parser(description="List information about HDF5 items.")
         self._parser.add_argument("item", nargs="*", default=["."],
-                                  help="Path(s) of which to list contents")
+                                  help="Item(s) to list  (the current group by default).")
         self._parser.add_argument("-l", help="show extra information", action="store_true")
-    
+
     def __call__(self, args, wd, h5mngr, term):
         """Execute the ls command."""
 
@@ -102,7 +102,7 @@ def _compile_data(items, term):
             detail = "  ->  "+term.coloured(item.target[0], term.Colour.iwhite) \
                      +"//"+item.target[1]
         elif item.kind == item.Kind.hardLink:
-            raise NotImplemented  # TODO
+            raise NotImplementedError()  # TODO
 
         nameStrs.append(nameStr)
         nameLens.append(nameLen)

@@ -62,7 +62,6 @@ class H5sh:
             "open": open_file.open_file(),
             "ext": run_external.run_external(),
             "history": history.history(),
-            "help": self._show_help
         }
 
         # dict of aliases (evaluated before _cmds)
@@ -72,43 +71,7 @@ class H5sh:
             "-": "ext"
         }
 
-    def _show_help(self, args, wd, h5mngr, term):
-        """Print the general help message."""
-        # A bit dirty to put it here but this way, we can pilfer some data of h5sh
-
-        helpStr = \
-"""\
-h5sh version {version}
-
-Currently opened file: '{fname}'
-
-Available commands:
-   exit, {commands}
-
-Aliases:
-   {aliases}
-
-Use option --help on a command to see a description.
-""".format(version=VERSION, fname=h5mngr.get_file_name(),
-           commands=", ".join(self._cmds.keys()), aliases=", ".join(self._aliases.keys()))
-
-        if TERM_KIND == "VT100":
-            helpStr += \
-"""
-The terminal backend is VT100; advanced input is supported.
-"""
-        else:
-            helpStr += \
-"""
-The terminal backend is fallback; only basic input is available.
-"""
-
-        helpStr += \
-"""
-For more information visit https://github.com/jl-wynen/h5shell\
-"""
-
-        term.print(helpStr)
+        self._cmds["help"] = show_help.show_help(VERSION, self._cmds, self._aliases, TERM_KIND)
 
     def _build_prompt(self, h5mngr):
         """Build prompt for terminal."""

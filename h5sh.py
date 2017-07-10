@@ -52,7 +52,6 @@ class H5sh:
 
     def __init__(self, term):
         self._term = term
-        self._fname = ""
         self._wd = []
 
         # dict of available commands
@@ -60,6 +59,7 @@ class H5sh:
             "ls": ls.ls(),
             "cd": cd.cd(),
             "pwd": pwd.pwd(),
+            "open": open_file.open_file(),
             "help": self._show_help
         }
 
@@ -107,13 +107,13 @@ For more information visit https://github.com/jl-wynen/h5shell\
 
         term.print(helpStr)
 
-    def _build_prompt(self):
+    def _build_prompt(self, h5mngr):
         """Build prompt for terminal."""
 
         prompt = ""
 
         # add file name and path
-        filePath = os.path.split(self._fname)
+        filePath = os.path.split(h5mngr.get_file_name())
         if filePath[0]:
             prompt += self._term.coloured(filePath[0]+"/", self._term.Colour.iblack)
         prompt += self._term.coloured(filePath[1], self._term.Colour.yellow)
@@ -132,14 +132,13 @@ For more information visit https://github.com/jl-wynen/h5shell\
         Main REPL to run the shell.
         """
 
-        self._fname = fname
         self._wd = []
 
         # 'open' the file
-        mngr = H5Manager(fname)
+        h5mngr = H5Manager(fname)
 
         while True:
-            inp = shlex.split(self._term.get_input(self._build_prompt()))
+            inp = shlex.split(self._term.get_input(self._build_prompt(h5mngr)))
 
             # special treatment for exit
             if inp and inp[0].strip() == "exit":
@@ -153,7 +152,7 @@ For more information visit https://github.com/jl-wynen/h5shell\
 
             try:
                 # execute command
-                self._cmds[inp[0]](inp[1:], self._wd, mngr, self._term)
+                self._cmds[inp[0]](inp[1:], self._wd, h5mngr, self._term)
             except KeyError:
                 self._term.print("h5sh: {}: command not found".format(inp[0]))
 

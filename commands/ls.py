@@ -13,7 +13,8 @@ class ls(command.Command):
         super(ls, self).__init__()
         
         self._parser = command.Command.Parser(description="List information about the items (the current group by default).")
-        self._parser.add_argument("item", nargs="*", default=["."])
+        self._parser.add_argument("item", nargs="*", default=["."],
+                                  help="Path(s) of which to list contents")
         self._parser.add_argument("-l", help="show extra information", action="store_true")
     
     def __call__(self, args, wd, h5mngr, term):
@@ -24,7 +25,7 @@ class ls(command.Command):
             return
 
         pathsAndItems = h5mngr.get_items(wd, *pa.item)
-        
+
         # show names of groups before listing contents
         printGroupNames = len(pathsAndItems) > 1
         first = True

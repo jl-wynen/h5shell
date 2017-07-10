@@ -46,11 +46,11 @@ class H5Manager:
     """
 
     def __init__(self, fname):
-        self._fname = fname
+        self._fname = None
         self._cache = {}
         self._openTime = 0 # time the file was last opened (secs since epoch)
 
-        self.read_file()
+        self.read_file(fname)
 
     def _clear_cache(self):
         """Empty out the cache"""
@@ -61,16 +61,17 @@ class H5Manager:
 
         try:
             if os.path.getmtime(self._fname) > self._openTime:
-                self.read_file()
+                self.read_file(self._fname)
         except FileNotFoundError:
             print("Error: file '{}' was removed.".format(self._fname))
             sys.exit(1)
 
-    def read_file(self):
-        """Read the HDF5 file."""
+    def read_file(self, fname):
+        """Read the HDF5 file. Preserves cache if file does not exist."""
 
-        self._clear_cache()
-        with h5.File(self._fname, "r") as f:
+        with h5.File(fname, "r") as f:
+            self._clear_cache()
+            self._fname = fname
             self._load_to_cache(f, self._cache)
             self._openTime = calendar.timegm(time.gmtime())
 

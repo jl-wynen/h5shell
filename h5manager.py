@@ -113,7 +113,8 @@ class H5Manager:
         result = []
         for spath in spaths:
             p = abspath(wd, [e for e in split_path(normpath(spath)) if e])
-            self._get_items(p, self._cache, result, wd)
+            self._get_items(p, self._cache, result, [])
+
         return result
 
     def get_item(self, path):
@@ -125,7 +126,7 @@ class H5Manager:
         Returns:
             Item that was found or None if it does not exist or is root.
         """
-        
+
         if not path:
             # cannot retrieve root object (does not exist)
             return None
@@ -156,7 +157,7 @@ class H5Manager:
             result (:obj:`list`): List of tuples (p, d), where d is a dict mapping names
                                   to items and p is the path to those items.
             fullpath (:obj:`list`): Path to items in current iteration (for internal use;
-                                    init with working directory).
+                                    init with empty list).
         """
 
         if not path:

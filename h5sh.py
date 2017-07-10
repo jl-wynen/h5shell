@@ -61,6 +61,7 @@ class H5sh:
             "pwd": pwd.pwd(),
             "open": open_file.open_file(),
             "ext": run_external.run_external(),
+            "history": history.history(),
             "help": self._show_help
         }
 

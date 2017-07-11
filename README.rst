@@ -24,4 +24,23 @@ Optional
 
 Usage
 -----
-Currently, there is no install script. Just run `python h5sh.py FILE` to launch the shell. A proper way to install it will be added in the future.
+
+Build and install by executing
+
+
+.. code-block:: bash
+                
+                python setup.py build
+                python setup.py install
+
+                
+The shell can then be used by running
+
+
+.. code-block:: bash
+                
+                h5sh FILE
+
+                
+which opens the given file. Type ``help`` any time in h5sh to get a list
+of available commands.

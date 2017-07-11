@@ -20,26 +20,41 @@ class Command:
         """
 
         def error(self, message):
-            """Parser encountered an error. Raises Command.ArgumentError."""
+            """
+            Parser encountered an error.
+
+            :raises: Command.ArgumentError
+            """
+
             raise Command.ArgumentError(message)
 
         def exit(self, status=0, message=None):
-            """Parser wants to exit. Raises Command.ExitParser."""
+            """
+            Called when parser wants to exit.
+
+            :raises: Command.ExitParser.
+            """
+
             raise Command.ExitParser()
 
     def __init__(self):
         self._parser = None
 
     def __call__(self):
+        """
+        Execute the command; not allowed for base command.
+
+        :raises: RuntimeError
+        """
         raise RuntimeError("Calling base command.")
 
     def _parse_args(self, args, term):
         """
         Parse command line arguments with custom Parser and handle exceptions.
-        Returns:
-            Parsed arguments on success, None otherwise.
+
+        :returns: Parsed arguments on success, None otherwise.
         """
-        
+
         if self._parser:
             try:
                 return self._parser.parse_args(args)
@@ -53,4 +68,5 @@ class Command:
                 return None
 
     def get_description(self):
+        """Returns the description of the command."""
         return self._parser.description

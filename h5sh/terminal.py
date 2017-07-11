@@ -21,18 +21,21 @@ class Terminal:
 
         def __nonzero__(self):
             """True if the history is non-empty."""
+            
             return not self._history
 
         def back(self, current):
             """
             Move back one element in the history.
             Raises an IndexError if already at the beginning of the history.
-            Arguments:
-                current(:obj:`str`): String currently visible in terminal.
-                                     Is ignored if not at end of history.
-            Returns:
+
+            :param current: String currently visible in terminal.
+                            Is ignored if not at end of history.
+
+            :returns:
                 Item in the history after moving back one step.
             """
+
             if self._histPtr == 0:
                 raise IndexError("Tried to go beyond start of history.")
             if self._histPtr == len(self._history):
@@ -44,9 +47,11 @@ class Terminal:
             """
             Move forward by one element in the history.
             Raises an IndexError if already at the end of the history.
-            Returns:
+
+            :returns:
                 Item in the history after moving forward one step.
             """
+
             if self._histPtr == len(self._history):
                 raise IndexError("Tries to got beyond end of history.")
 
@@ -57,6 +62,7 @@ class Terminal:
 
         def append(self, item):
             """Append a new item to the history and move the history pointer to the end."""
+
             if not self._history or item != self._history[-1]:
                 self._history.append(item)
                 self._histPtr = len(self._history)
@@ -67,11 +73,13 @@ class Terminal:
 
         def reset(self):
             """Reset all changes done by History.back() and History.forward()."""
+            
             self._current = ""
             self._histPtr = len(self._history)
 
         def dump(self, showNumbers=True):
             """Return a string representation of the history."""
+            
             if showNumbers:
                 return "\r\n".join("{:5d}  {:s}".format(i, self._history[i])
                                    for i in range(len(self._history)))
@@ -82,6 +90,7 @@ class Terminal:
 
     class Colour:
         """Colours for output. Numbers correspond to ANSI escape codes."""
+
         black  = 30
         red    = 31
         green  = 32
@@ -107,9 +116,11 @@ class Terminal:
     def get_input(self, prompt):
         """
         Query user for input.
-        Return:
-        The string entered. If the user entered EOF, 'exit' is returned.
+
+        :returns:
+            The string entered. If the user entered EOF, 'exit' is returned.
         """
+
         inp = None
         while not inp:
             try:
@@ -124,12 +135,15 @@ class Terminal:
 
     def print(self, *args, **kwargs):
         """Print something to the terminal."""
+
         print(*args, **kwargs)
 
     def get_width(self):
         """Return current the number of columns of the terminal."""
+
         return shutil.get_terminal_size().columns
 
     def coloured(self, string, colour):
         """Fallback: returns string without change."""
+
         return string

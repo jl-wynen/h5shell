@@ -53,7 +53,7 @@ def _print_plain(items, term):
     """Print table of H5 items."""
 
     nameStrs, nameLens, _ = _compile_data(items, term)
-    
+
     # build layout w/o respecting colour codes
     separator = "   "
     widths = table_layout(nameLens, term.get_width(), len(separator))
@@ -76,11 +76,14 @@ def _print_list(items, term):
 def _compile_data(items, term):
     """
     Sort items, attach colour codes and build detailled information.
-    Returns:
-        Tuple of list of names with colour codes, list of name lengths w/o
-        colour codes, and list of detailled information.
+
+    :returns:
+        Tuple of:
+         * list of names with colour codes
+         * list of name lengths w/o colour codes
+         * list of detailled information.
     """
-    
+
     nameStrs = []  # the string to be printed
     nameLens = []  # length of string without colour codes
     details = []   # extra stuff to be printed after names

@@ -3,7 +3,7 @@
 from setuptools import setup
 
 def readme():
-    with open("README.md", "r") as f:
+    with open("README.rst", "r") as f:
         return f.read()
 
 setup(
@@ -17,14 +17,14 @@ setup(
     author_email="j-l.wynen@hotmail.de",
     license="MIT",
     packages=["h5sh", "h5sh/commands"],
-    # scripts=["bin/h5sh.py"],
     entry_points={
         "console_scripts": ["h5sh=h5sh.command_line:main"]
     },
     requires=["h5py"],
     extras_require={
-        "psutil": ["psutil"]
+        "psutil": ["psutil"],
+        "rtd_theme": ["sphinx_rtd_theme"]
     },
-#    include_package_data=True,
-#    zip_safe=False
+    include_package_data=True,
+    zip_safe=False
 )

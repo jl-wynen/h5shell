@@ -8,6 +8,9 @@ dist
 *.egg-info
 *.egg
 
+# documentation
+_build
+
 # HDF5 files
 *.h5
 *.hdf5

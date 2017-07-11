@@ -12,19 +12,18 @@ def table_layout(lens, maxWidth, separatorLength=1):
     fit into the given maximum width. If Items do not fit, the returned
     widths are the maximum of lens.
 
-    Args:
-        lens (:obj:`list` of int): Lengths of all items to be layed out.
-        maxWidth (int): Maximum width for the table.
-        separatorLength (int, optional): Length of the separator between items.
+    :param lens: List of lengths of all items to be layed out.
+    :param maxWidth: Maximum width for the table.
+    :param separatorLength: Length of the separator between items.
 
-    Returns:
+    :returns:
         List of lists of widths. ``table_layout(...)[i][j]`` gives the width of
         element ``(i,j)`` in the table.
     """
 
     # i and j are row and column indices, respectively.
     # m and n are number of rows and columns, repsectively.
-    #  n does not include columns that are not completely filled.
+    # n does not include columns that are not completely filled.
 
     N = len(lens)
     m = 1
@@ -60,11 +59,10 @@ def print_table(strs, maxWidth, separator=" ", prnt=print):
     """
     Print a table of strings.
 
-    Args:
-        strs (:obj:`list` of :obj:`str`): Strings to print.
-        maxWidth (int): Maximum width to use for the table.
-        separator (:obj:`str`, optional): String that separates list entries.
-        prnt (function, optional): Function to use for printing.
+    :param strs: List of strings to print.
+    :param maxWidth: Maximum width to use for the table.
+    :param separator: String that separates list entries.
+    :param prnt: Function to use for printing.
     """
 
     widths = table_layout([len(s) for s in strs], maxWidth, len(separator))
@@ -80,10 +78,9 @@ def split_path(spath):
     The result can be partly undone by calling '/'.join(split_path(...))
     up to leading and trailing slashes.
     A leading slash is returned as an individual list element.
-    Arguments:
-        spath(:obj:`str`) String representing the path.
-    Returns:
-        Split path as list of strings.
+
+    :param spath: String representing the path.
+    :returns: Split path as list of strings.
     """
 
     res = split(spath)  # split into (head, tail)

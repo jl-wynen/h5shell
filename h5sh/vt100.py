@@ -19,7 +19,8 @@ from terminal import Terminal
 class VT100(Terminal):
     """
     Manager for VT100 emulators.
-    Supports more advanced features than the fallback but must be activated bafore use.
+    Supports more advanced features than the fallback like browsing the history
+    and coloured output.
     """
 
     def __init__(self):
@@ -55,7 +56,7 @@ class VT100(Terminal):
         self._do[ASCII.DEL] = self._do_delete_backwards
         if have_psutil:
             self._do[ASCII.SUB] = self._do_suspend
-            
+
         # maps escape sequences to some functions
         self._do_esc = {
             "[A": self._do_up,
@@ -68,9 +69,10 @@ class VT100(Terminal):
     def _raw_mode(self):
         """
         Switch terminal to raw mode.
-        Attention:
-        Must be switched back before the program terminates!
-        See VT100._reset() and VT100.activate().
+
+        .. warning::
+            Must be switched back before the program terminates!
+            See :func:`~vt100.VT100._reset()` and :func:`~vt100.VT100._activate()`.
         """
 
         self._oldattrs = termios.tcgetattr(self.inFD)
@@ -83,12 +85,17 @@ class VT100(Terminal):
             raise
 
     def _reset(self):
-        """Reset the terminal to its previous state before calling VT100._raw_mode()."""
+        """
+        Reset the terminal to its previous state before calling
+        :func:`~vt100.VT100._raw_mode()`.
+        """
+
         termios.tcsetattr(self.inFD, termios.TCSADRAIN, self._oldattrs)
         self._rawMode = False
 
     def _move_cursor_left(self, amt=1):
         """Shift cursor left by amt."""
+        
         if amt == 0:
             pass
         elif self._cursor >= amt:
@@ -100,6 +107,7 @@ class VT100(Terminal):
 
     def _move_cursor_right(self, amt=1):
         """Shift cursor right by amt."""
+        
         if amt == 0:
             pass
         elif self._cursor <= len(self._inStr)-amt:
@@ -111,10 +119,12 @@ class VT100(Terminal):
 
     def _clear_output_from_cursor(self):
         """Erase all printed output to the right of cursor. Does not change _inStr"""
+
         self.print(chr(ASCII.ESC)+"[K", end="")
 
     def _clear_input(self):
         """Erase all input both in _inStr and in the terminal."""
+
         if self._inStr:
             self._inStr = ""
             if self._cursor > 0:
@@ -123,6 +133,7 @@ class VT100(Terminal):
 
     def _do_up(self):
         """Handle 'cursor up' command. Navigates history."""
+
         try:
             aux = self.history.back(self._inStr)
         except IndexError:
@@ -133,6 +144,7 @@ class VT100(Terminal):
 
     def _do_down(self):
         """Handle 'cursor down' command. Navigates history."""
+
         try:
             aux = self.history.forward()
         except IndexError:
@@ -143,10 +155,12 @@ class VT100(Terminal):
 
     def _do_right(self):
         """Handle 'cursor right' command. Simply shifts cursor."""
+
         self._move_cursor_right()
 
     def _do_left(self):
         """Handle 'cursor left' command. Simply shifts cursor."""
+
         self._move_cursor_left()
 
     def _do_suspend(self):
@@ -176,6 +190,7 @@ class VT100(Terminal):
 
     def _do_abort(self):
         """Abort and clear current input; reprint prompt."""
+
         self.print("^C")
         self._inStr = ""
         self._cursor = 0
@@ -184,12 +199,14 @@ class VT100(Terminal):
 
     def _do_exit(self):
         """Returns 'exit' if input is empty."""
+
         if not self._inStr:
             self.print("exit")
             return "exit"
 
     def _do_delete_backwards(self):
         """Remove one character before the cursor."""
+
         if self._cursor > 0:
             left = self._inStr[:self._cursor-1]
             right = self._inStr[self._cursor:]
@@ -202,6 +219,7 @@ class VT100(Terminal):
 
     def _do_delete_forwards(self):
         """Remove one character after the cursor."""
+
         if self._cursor < len(self._inStr):
             left = self._inStr[:self._cursor]
             right = self._inStr[self._cursor+1:]
@@ -220,6 +238,7 @@ class VT100(Terminal):
         Enter the input into history and return it.
         Only reprints prompt if input is empty.
         """
+
         if self._inStr:
             self.history.append(self._inStr)
             self.print()
@@ -230,15 +249,17 @@ class VT100(Terminal):
 
     def _do_escape_sequence(self):
         """Switch state to inputting escape sequence."""
+
         self._handle_input = self._esc_input_handle
         self._escSeq = ""
 
     def _do_ignore(self):
         """Don't do nothing."""
+
         pass
 
     def _insert(self, s):
-        """Insert a string into the input at cursor; adjust cursor"""
+        """Insert string s into the input at cursor; adjust cursor"""
 
         # modify internal string
         left = self._inStr[:self._cursor]
@@ -253,10 +274,13 @@ class VT100(Terminal):
 
     def _default_input_handle(self, c):
         """
-        Handle input of single characters via VT100._do.
-        Returns:
-        Result of function associated with c.
+        Handle input of a single character c via VT100._do.
+
+        :returns:
+            Return value of function associated with c.
+            If `None`, input was not completely parsed.
         """
+
         try:
             return self._do[ord(c)]()
         except KeyError:
@@ -268,9 +292,11 @@ class VT100(Terminal):
         Handle input of escape sequences.
         Collects characters for sequence and execute it once complete.
         Switches back to _default_input_handle when done.
-        Returns:
-        Result of executing function for escape sequence.
+
+        :returns:
+            Return value of executing function for escape sequence.
         """
+
         self._escSeq += c
         oc = ord(c)
 
@@ -286,6 +312,7 @@ class VT100(Terminal):
         Switches to raw mode and returns a context manager to switch back
         when the shell is terminated.
         """
+        
         class TermMngr:
             def __init__(self, term):
                 self.term = term
@@ -301,9 +328,11 @@ class VT100(Terminal):
     def get_input(self, prompt):
         """
         Query user for input.
-        Return:
-        The string entered. If the user entered EOF, 'exit' is returned.
+
+        :returns:
+            The string entered. If the user entered EOF, 'exit' is returned.
         """
+
         self._prompt = prompt
         with self._activate():
             self.print(self._prompt, end="")
@@ -319,6 +348,7 @@ class VT100(Terminal):
         Print something to the terminal.
         The built in print function does not work properly when in raw mode.
         """
+
         if self._rawMode:
             outp = [s.replace("\n", "\n\r") if isinstance(s, str) else s for s in args]
             if end:
@@ -335,4 +365,5 @@ class VT100(Terminal):
         """
         Return string with colour codes attached based on given colour (Terminal.Colour).
         """
+
         return chr(ASCII.ESC)+"["+str(colour)+"m"+string+chr(ASCII.ESC)+"[0m"

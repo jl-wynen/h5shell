@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from setuptools import setup
-import os.path
 import subprocess
 
 def readme():
@@ -9,10 +8,12 @@ def readme():
         return f.read()
 
 def get_version():
-    try:
-        return subprocess.check_output(["git", "describe"]).rstrip().decode("utf-8")
-    except subprocess.CalledProcessError:
-        return "0.0"  # no tag set, default to 0.0
+    tags = [e for e in subprocess.check_output(["git", "tag"]).decode("utf-8").split("\n")
+            if e]
+    if tags:
+        return tags[-1]
+
+    return "0.0"  # no tag found, default to 'no version'
 
 setup(
     name="h5sh",

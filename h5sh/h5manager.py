@@ -9,6 +9,7 @@ import os.path
 import calendar
 import time
 import sys
+import re
 
 import h5py as h5
 
@@ -31,14 +32,18 @@ class H5Item:
         softLink     = 3
         externalLink = 4
 
-    def __init__(self, name, kind, children=None, target=None, shape=None, dtype=None):
+    def __init__(self, name, kind, children=None, shape=None, dtype=None,
+                 target=None, dangling=None):
         self.name = name
         self.kind = kind
         self.children = children
-        self.target = target  # string for softLink,
-                              # (filename, path_inside_file) for externalLink
         self.shape = shape
         self.dtype = dtype
+        self.target = target  # string for softLink,
+                              # (filename, path_inside_file) for externalLink
+        self.dangling = dangling  # None for not dangling or "object" or "file"
+                                  # to describe what does not exist
+
 
 class H5Manager:
     """
@@ -78,7 +83,14 @@ class H5Manager:
     def _load_to_cache(self, group, cache):
         """Load an HDF5 group and its children into cache."""
         for k in group:
-            item = group[k]
+            try:
+                # attempt to get the item
+                item = group[k]
+            except KeyError as error:
+                # should only fail if a link dangles
+                self._load_dangling(k, error, group.get(k, getlink=True), cache)
+                continue
+
             if isinstance(item, h5.Group):
                 cch = {}
                 self._load_to_cache(item, cch)
@@ -97,6 +109,28 @@ class H5Manager:
                 else:
                     cache[k] = H5Item(k, H5Item.Kind.dataset,
                                       shape=item.shape, dtype=item.dtype)
+
+    def _load_dangling(self, key, error, lnk, cache):
+        """Load a dangling link into cache."""
+
+        if isinstance(lnk, h5.SoftLink):
+            cache[key] = H5Item(key, H5Item.Kind.softLink,
+                                target=lnk.path, dangling="object")
+
+        elif isinstance(lnk, h5.ExternalLink):
+            # find the reason why it dangles
+            if re.match(r".*Unable to open external file", error.args[0]):
+                dngl = "file"  # file does not exist
+            else:
+                dngl = "object"  # object in file does not exist
+
+            cache[key] = H5Item(key, H5Item.Kind.externalLink,
+                                target=(lnk.filename, lnk.path), dangling=dngl)
+
+        else:
+            # something is seriously wrong if we get here
+            print("Error reading file at object '{}': {}".format(key, error.args[0]))
+            sys.exit(1)
 
     def get_items(self, wd, *spaths):
         """

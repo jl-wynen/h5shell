@@ -99,12 +99,20 @@ def _compile_data(items, term):
             nameStr, nameLen = _format_group_name(name, term)
             detail = ""
         elif item.kind == item.Kind.softLink:
-            nameStr, nameLen = _format_softlink_name(name, term)
+            nameStr, nameLen = _format_softlink_name(name, term, item.dangling)
             detail = "  ->  "+item.target
+            if item.dangling:
+                detail += "  "+term.coloured("dangling", term.Colour.red)
         elif item.kind == item.Kind.externalLink:
-            nameStr, nameLen = _format_externallink_name(name, term)
+            nameStr, nameLen = _format_externallink_name(name, term, item.dangling)
             detail = "  ->  "+term.coloured(item.target[0], term.Colour.iwhite) \
                      +"//"+item.target[1]
+            if item.dangling:
+                # show why it dangles
+                if item.dangling == "object":
+                    detail += "  "+term.coloured("dangling (object)", term.Colour.red)
+                else:
+                    detail += "  "+term.coloured("dangling (file)", term.Colour.red)
         elif item.kind == item.Kind.hardLink:
             raise NotImplementedError()  # TODO
 
@@ -123,12 +131,24 @@ def _format_group_name(name, term):
     return (term.coloured(name, term.Colour.iblue)+"/",
             len(name)+1)
 
-def _format_softlink_name(name, term):
+def _format_softlink_name(name, term, dangling):
     """Returns name with colour codes and length w/o them for soft links."""
-    return (term.coloured(name, term.Colour.icyan)+"@",
-            len(name)+1)
 
-def _format_externallink_name(name, term):
+    n = term.coloured(name, term.Colour.icyan)
+    if dangling:
+        n += term.coloured("!", term.Colour.ired)
+    else:
+        n += "@"
+
+    return (n, len(name)+1)
+
+def _format_externallink_name(name, term, dangling):
     """Returns name with colour codes and length w/o them for external links."""
-    return (term.coloured(name, term.Colour.cyan)+"@",
-            len(name)+1)
+
+    n = term.coloured(name, term.Colour.cyan)
+    if dangling:
+        n += term.coloured("!", term.Colour.ired)
+    else:
+        n += "@"
+
+    return (n, len(name)+1)

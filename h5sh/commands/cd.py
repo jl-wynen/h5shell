@@ -14,7 +14,8 @@ class cd(command.Command):
     def __init__(self):
         super(cd, self).__init__()
 
-        self._parser = command.Command.Parser(description="Change the shell working directory.")
+        self._parser = command.Command.Parser(prog="cd",
+                                              description="Change the shell working directory.")
         self._parser.add_argument("group", nargs="?", default="/",
                                   help="HDF5 group to change to. The root of the file by default.")
 

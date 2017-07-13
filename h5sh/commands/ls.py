@@ -12,7 +12,8 @@ class ls(command.Command):
     def __init__(self):
         super(ls, self).__init__()
 
-        self._parser = command.Command.Parser(description="List information about HDF5 items.")
+        self._parser = command.Command.Parser(prog="ls",
+                                              description="List information about HDF5 items.")
         self._parser.add_argument("item", nargs="*", default=["."],
                                   help="Item(s) to list  (the current group by default).")
         self._parser.add_argument("-l", help="show extra information", action="store_true")

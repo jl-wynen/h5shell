@@ -13,9 +13,9 @@ class run_external(command.Command):
     def __init__(self):
         super(run_external, self).__init__()
 
-        self._parser = command.Command.Parser(
-            description="Execute commands in the system shell.\
-            The working directory is the directory you launched h5sh from.")
+        self._parser = command.Command.Parser(prog="ext",
+                                              description="Execute commands in the system shell.\
+                                              The working directory is the directory you launched h5sh from.")
         self._parser.add_argument("cmd", nargs=argparse.REMAINDER,
                                   help="Command(s) to execute.")
 

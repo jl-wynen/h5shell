@@ -12,7 +12,8 @@ class open_file(command.Command):
     def __init__(self):
         super(open_file, self).__init__()
 
-        self._parser = command.Command.Parser(description="Switch to another HDF5 file.")
+        self._parser = command.Command.Parser(prog="open",
+                                              description="Switch to another HDF5 file.")
         self._parser.add_argument("file",
                                   help="File to open. Path is relative to the directory from which you launched h5sh.")
 

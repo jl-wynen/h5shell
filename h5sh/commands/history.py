@@ -10,8 +10,8 @@ class history(command.Command):
     def __init__(self):
         super(history, self).__init__()
 
-        self._parser = command.Command.Parser(
-            description="Show the input history")
+        self._parser = command.Command.Parser(prog="history",
+                                              description="Show the input history")
 
     def __call__(self, args, wd, h5mngr, term):
         """Execute the history command."""

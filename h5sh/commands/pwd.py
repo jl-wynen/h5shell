@@ -10,7 +10,8 @@ class pwd(command.Command):
     def __init__(self):
         super(pwd, self).__init__()
 
-        self._parser = command.Command.Parser(description="Print the current working directory.")
+        self._parser = command.Command.Parser(prog="pwd",
+                                              description="Print the current working directory.")
 
     def __call__(self, args, wd, h5mngr, term):
         """Execute the pwd command."""

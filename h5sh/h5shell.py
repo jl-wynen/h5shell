@@ -5,6 +5,7 @@ Contains the shell.
 import argparse
 import shlex
 import os.path
+import pkg_resources
 
 from h5sh.commands import *
 from h5sh.h5manager import H5Manager
@@ -19,7 +20,7 @@ except ImportError:
     TERM_KIND = "FALLBACK"
 
 
-VERSION = "1.0"
+VERSION = pkg_resources.require("h5sh")[0].version
 
 
 def parse_args():

@@ -12,7 +12,7 @@ import sys
 
 import h5py as h5
 
-from util import split_path, abspath
+from h5sh.util import split_path, abspath
 
 class H5Item:
     """

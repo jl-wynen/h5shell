@@ -6,7 +6,7 @@ from . import command
 
 from posixpath import normpath
 
-from util import split_path, abspath
+from h5sh.util import split_path, abspath
 
 class cd(command.Command):
     """Command to change working directory."""

@@ -13,8 +13,8 @@ try:
 except ImportError:
     have_psutil = False
 
-from ascii_codes import ASCII
-from terminal import Terminal
+from h5sh.ascii_codes import ASCII
+from h5sh.terminal import Terminal
 
 class VT100(Terminal):
     """

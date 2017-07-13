@@ -4,7 +4,7 @@ Module for ls command.
 
 from . import command
 
-from util import table_layout
+from h5sh.util import table_layout
 
 class ls(command.Command):
     """Command to list items"""

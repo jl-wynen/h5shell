@@ -19,8 +19,6 @@
 #
 import os
 import sys
-# sys.path.insert(0, os.path.abspath('..'))
-# sys.path.insert(0, os.path.abspath('../h5sh'))
 sys.path.append(os.path.abspath(".."))
 sys.path.append(os.path.abspath("../h5sh"))
 
@@ -52,7 +50,7 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 # General information about the project.
-project = 'h5sh'
+project = 'h5shell'
 copyright = '2017, Jan-Lukas Wynen'
 author = 'Jan-Lukas Wynen'
 

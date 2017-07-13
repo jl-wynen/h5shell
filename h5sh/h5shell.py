@@ -6,16 +6,16 @@ import argparse
 import shlex
 import os.path
 
-from commands import *
-from h5manager import H5Manager
+from h5sh.commands import *
+from h5sh.h5manager import H5Manager
 
 
 # import best available terminal backend
 try:
-    from vt100 import VT100 as Term
+    from h5sh.vt100 import VT100 as Term
     TERM_KIND = "VT100"
 except ImportError:
-    from terminal import Terminal as Term
+    from h5sh.terminal import Terminal as Term
     TERM_KIND = "FALLBACK"
 
 
